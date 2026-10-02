@@ -17,6 +17,8 @@ managers side by side.
 - [Requirements](#requirements)
 - [Installation](#installation)
 - [Usage](#usage)
+- [Lazy loading](#lazy-loading)
+- [Collapsible sections](#collapsible-sections)
 - [Why not `hasCombinedRelationManagerTabsWithContent()`](#why-not-hascombinedrelationmanagertabswithcontent)
 - [Gotchas](#gotchas)
 - [AI agents](#ai-agents)
@@ -117,6 +119,52 @@ Tabs::make('Tabs')->tabs([
 ]);
 ```
 
+## Lazy loading
+
+Filament relation managers are already lazy by default (`RelationManager::$isLazy = true`):
+Livewire renders a placeholder and mounts the manager when it scrolls into view. A tab panel
+that is not active and a section that is collapsed are `display: none`, so they never intersect —
+**nothing is mounted or queried until the tab is opened / the section expanded.** (Older Filament
+discussions asking for this predate that default.) The `lazy:` argument lets you override the
+manager per placement:
+
+```php
+RelationManagerTab::make(PostsRelationManager::class);               // follow the manager (default)
+RelationManagerTab::make(PostsRelationManager::class, lazy: true);   // force lazy, even if $isLazy = false
+RelationManagerTab::make(PostsRelationManager::class, lazy: false);  // mount eagerly with the page
+RelationManagerTab::many([...], lazy: true);
+```
+
+Note that the tab **badge** is computed by the parent page, so a `getBadge()` that runs a query
+still runs on the initial render — use `$isBadgeDeferred` on the manager if that matters.
+
+## Collapsible sections
+
+When tabs are the wrong layout, put the manager in a collapsible `Section`:
+
+```php
+use Asignua\FilamentRelationManagerTabs\RelationManagerSection;
+
+$schema->components([
+    Section::make('Details')->schema([/* ... */]),
+    RelationManagerSection::make(PostsRelationManager::class),              // collapsed + lazy
+    RelationManagerSection::make(
+        MembersRelationManager::class,
+        label: 'People',
+        icon: 'heroicon-o-users',
+        collapsed: false,
+        lazy: false,
+        key: 'people',
+    ),
+]);
+```
+
+The heading, icon and badge come from the manager like on a tab; the section is hidden on Create
+and when `canViewForRecord()` is false. By default it starts **collapsed** and **lazy** (the
+manager is mounted on first expand). It returns a regular `Filament\Schemas\Components\Section`,
+so `->columnSpanFull()`, `->description()`, `->persistCollapsed()` and so on still work. The
+same slug-key and "empty `getRelations()`" rules apply.
+
 ## Why not `hasCombinedRelationManagerTabsWithContent()`
 
 Stock Filament draws the form with its own `Tabs`, and the related records in a separate block
@@ -136,8 +184,9 @@ manager into the form's own `Tabs`, which is the only way to get a single row.
   sequences in the button, and the tab opens **empty, with no console error**. The default key is
   the slug of the class basename (`relation-manager-postsrelationmanager`). Pass your own `key:`
   when you use `persistTabInQueryString()`, because the key ends up in the URL.
-- **Do not also return the manager from `getRelations()`.** It would be rendered twice: as a tab
-  and as a block under the form.
+- **Do not also return the manager from `getRelations()`** (stock Filament renders whatever it
+  returns as a block under the form). A manager left registered there is rendered twice: once as
+  your tab or section and once as the stock block.
 - **Nesting inside the edit page `<form>` is fine.** Filament draws the action modal only after
   the action is mounted (a Livewire DOM patch), so the nested form survives. You do not need
   `hasFormWrapper(): false`.

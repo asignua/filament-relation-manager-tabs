@@ -4,3 +4,4 @@
 - Remove the manager from the resource's `getRelations()` — otherwise it renders twice (tab + block under the form).
 - Never pass a class name as `key:` — the tab must be a slug (a key with backslashes opens an EMPTY tab, no console error). Default key: `relation-manager-<classbasename slug>`.
 - The tab is hidden on Create (no owner record yet) and when `canViewForRecord()` is false; label, icon and badge come from the manager's `getTitle()`, `getIcon()`, `getBadge()`/`getBadgeColor()`/`getBadgeTooltip()`.
+- `RelationManagerSection::make(XRelationManager::class)` puts the manager in a collapsible `Section` (collapsed + lazy by default, hidden on Create). `lazy:` (null = follow the manager, true/false = force) works on tabs and sections; Filament managers are lazy by default, so a closed tab/section mounts nothing until opened.

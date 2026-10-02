@@ -58,12 +58,15 @@ class RelationManagerTab
      * @param Htmlable|string|null          $label   the label; null = the manager's `getTitle()`
      * @param BackedEnum|string|null        $icon    the icon; null = the manager's `getIcon()`
      * @param string|null                   $key     the tab key; null = slug of the class name
+     * @param bool|null                     $lazy    null = follow the manager's `$isLazy` (Filament's
+     *                                               default is lazy); true = force lazy; false = force eager
      */
     public static function make(
         string $manager,
         string|Htmlable|null $label = null,
         string|BackedEnum|null $icon = null,
         ?string $key = null,
+        ?bool $lazy = null,
     ): Tabs\Tab {
         return Tabs\Tab::make()
             ->key($key ?? 'relation-manager-'.Str::slug(class_basename($manager)))
@@ -86,15 +89,46 @@ class RelationManagerTab
                 && $record->exists
                 && $manager::canViewForRecord($record, $livewire::class))
             ->schema([
-                Livewire::make(
-                    $manager,
-                    static fn (Model $record, LivewireComponent $livewire): array => [
-                        'ownerRecord' => $record,
-                        'pageClass' => $livewire::class,
-                        ...$manager::getDefaultProperties(),
-                    ],
-                )->key($manager),
+                self::livewire($manager, $lazy),
             ]);
+    }
+
+    /**
+     * The embedded manager.
+     *
+     * Filament relation managers are already lazy by default (`RelationManager::$isLazy = true`
+     * puts `lazy` into `getDefaultProperties()`): Livewire renders a placeholder and mounts the
+     * component when it enters the viewport. A hidden tab panel or a collapsed section
+     * (`display: none`) never intersects, so nothing is mounted or queried before it is opened.
+     * `$lazy` overrides the manager: `true` forces the placeholder even for a manager with
+     * `$isLazy = false`, `false` forces an eager mount, `null` keeps the manager's own setting.
+     *
+     * @param class-string<RelationManager> $manager
+     */
+    public static function livewire(string $manager, ?bool $lazy = null): Livewire
+    {
+        return Livewire::make(
+            $manager,
+            static function (Model $record, LivewireComponent $livewire) use ($manager, $lazy): array {
+                $properties = [
+                    'ownerRecord' => $record,
+                    'pageClass' => $livewire::class,
+                    ...$manager::getDefaultProperties(),
+                ];
+
+                if ($lazy === null) {
+                    return $properties;
+                }
+
+                if ($lazy) {
+                    $properties['lazy'] = true;
+                } else {
+                    unset($properties['lazy']);
+                }
+
+                return $properties;
+            },
+        )->key($manager);
     }
 
     /**
@@ -104,10 +138,10 @@ class RelationManagerTab
      *
      * @return array<int, Tabs\Tab>
      */
-    public static function many(array $managers): array
+    public static function many(array $managers, ?bool $lazy = null): array
     {
         return array_map(
-            static fn (string $manager): Tabs\Tab => self::make($manager),
+            static fn (string $manager): Tabs\Tab => self::make($manager, lazy: $lazy),
             array_values($managers),
         );
     }

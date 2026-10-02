@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Workbench\App\Filament\Resources\Teams;
 
+use Asignua\FilamentRelationManagerTabs\RelationManagerSection;
 use Asignua\FilamentRelationManagerTabs\RelationManagerTab;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
@@ -16,8 +17,11 @@ use Workbench\App\Filament\Resources\Teams\Pages\CreateTeam;
 use Workbench\App\Filament\Resources\Teams\Pages\EditTeam;
 use Workbench\App\Filament\Resources\Teams\Pages\ListTeams;
 use Workbench\App\Filament\Resources\Teams\Pages\ViewTeam;
+use Workbench\App\Filament\Resources\Teams\RelationManagers\ForcedEagerPostsRelationManager;
 use Workbench\App\Filament\Resources\Teams\RelationManagers\HiddenPostsRelationManager;
+use Workbench\App\Filament\Resources\Teams\RelationManagers\LazyPostsRelationManager;
 use Workbench\App\Filament\Resources\Teams\RelationManagers\PostsRelationManager;
+use Workbench\App\Filament\Resources\Teams\RelationManagers\SectionPostsRelationManager;
 use Workbench\App\Models\Team;
 
 class TeamResource extends Resource
@@ -33,7 +37,10 @@ class TeamResource extends Resource
                 ]),
                 RelationManagerTab::make(PostsRelationManager::class),
                 RelationManagerTab::make(HiddenPostsRelationManager::class),
+                RelationManagerTab::make(LazyPostsRelationManager::class, lazy: true),
+                RelationManagerTab::make(ForcedEagerPostsRelationManager::class, lazy: false),
             ])->columnSpanFull(),
+            RelationManagerSection::make(SectionPostsRelationManager::class)->columnSpanFull(),
         ]);
     }
 
