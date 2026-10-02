@@ -42,6 +42,14 @@ For comparison, stock Filament — the managers get a second row of tabs under t
 
 ![Stock Filament: a second row of tabs under the form](https://raw.githubusercontent.com/asignua/filament-relation-manager-tabs/v1.0.0/art/stock-filament.jpg)
 
+A `RelationManagerSection` starts collapsed - nothing is loaded:
+
+![A collapsed relation-manager section](https://raw.githubusercontent.com/asignua/filament-relation-manager-tabs/v1.1.0/art/section-collapsed.jpg)
+
+Expanding it mounts the manager on demand:
+
+![The expanded section](https://raw.githubusercontent.com/asignua/filament-relation-manager-tabs/v1.1.0/art/section-expanded.jpg)
+
 ## Requirements
 
 - PHP 8.3+
@@ -134,6 +142,8 @@ RelationManagerTab::make(PostsRelationManager::class, lazy: true);   // force la
 RelationManagerTab::make(PostsRelationManager::class, lazy: false);  // mount eagerly with the page
 RelationManagerTab::many([...], lazy: true);
 ```
+
+A lazy manager mounts when its placeholder enters the viewport, so a section expanded *below the fold* loads when you scroll to it, not at the click.
 
 Note that the tab **badge** is computed by the parent page, so a `getBadge()` that runs a query
 still runs on the initial render — use `$isBadgeDeferred` on the manager if that matters.
