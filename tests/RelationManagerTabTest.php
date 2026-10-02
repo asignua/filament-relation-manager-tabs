@@ -9,6 +9,7 @@ use Filament\Schemas\Components\Tabs;
 use Livewire\Livewire;
 use Workbench\App\Filament\Resources\Teams\Pages\CreateTeam;
 use Workbench\App\Filament\Resources\Teams\Pages\EditTeam;
+use Workbench\App\Filament\Resources\Teams\Pages\ViewTeam;
 use Workbench\App\Filament\Resources\Teams\RelationManagers\HiddenPostsRelationManager;
 use Workbench\App\Filament\Resources\Teams\RelationManagers\PostsRelationManager;
 use Workbench\App\Models\Post;
@@ -148,5 +149,42 @@ class RelationManagerTabTest extends TestCase
         $this->assertContainsOnlyInstancesOf(Tabs\Tab::class, $tabs);
         $this->assertSame('relation-manager-postsrelationmanager', $tabs[0]->getKey(isAbsolute: false));
         $this->assertSame('relation-manager-hiddenpostsrelationmanager', $tabs[1]->getKey(isAbsolute: false));
+    }
+
+    public function test_tab_shows_the_manager_badge_color_and_tooltip(): void
+    {
+        $tab = $this->editTab(PostsRelationManager::class);
+
+        $this->assertSame('2', $tab->getBadge());
+        $this->assertSame('success', $tab->getBadgeColor());
+        $this->assertSame('Published posts', $tab->getBadgeTooltip());
+    }
+
+    public function test_tab_works_on_the_view_page(): void
+    {
+        $html = Livewire::test(ViewTeam::class, ['record' => $this->team()->getRouteKey()])->html();
+
+        $this->assertContains('relation-manager-postsrelationmanager', $this->buttonKeys($html));
+        $this->assertContains('overview::tab', $this->buttonKeys($html)); // the infolist's own tab
+        $this->assertStringContainsString('RelationManagers\\PostsRelationManager', $html);
+    }
+
+    /**
+     * The evaluated tab as the Edit page sees it — badge closures need the record and the page.
+     */
+    private function editTab(string $manager): Tabs\Tab
+    {
+        $component = Livewire::test(EditTeam::class, ['record' => $this->team()->getRouteKey()]);
+
+        /** @var Tabs $tabs */
+        $tabs = $component->instance()->form->getComponents()[0];
+
+        foreach ($tabs->getChildSchema()->getComponents() as $tab) {
+            if ($tab instanceof Tabs\Tab && $tab->getKey(isAbsolute: false) === 'relation-manager-'.strtolower(class_basename($manager))) {
+                return $tab;
+            }
+        }
+
+        $this->fail('Tab for '.$manager.' not found');
     }
 }

@@ -73,6 +73,15 @@ class RelationManagerTab
             ->icon($icon ?? static fn (?Model $record, LivewireComponent $livewire): mixed => $record
                 ? $manager::getIcon($record, $livewire::class)
                 : null)
+            ->badge(static fn (?Model $record, LivewireComponent $livewire): ?string => $record
+                ? $manager::getBadge($record, $livewire::class)
+                : null)
+            ->badgeColor(static fn (?Model $record, LivewireComponent $livewire): ?string => $record
+                ? $manager::getBadgeColor($record, $livewire::class)
+                : null)
+            ->badgeTooltip(static fn (?Model $record, LivewireComponent $livewire): string|Htmlable|null => $record
+                ? $manager::getBadgeTooltip($record, $livewire::class)
+                : null)
             ->visible(static fn (?Model $record, LivewireComponent $livewire): bool => $record instanceof Model
                 && $record->exists
                 && $manager::canViewForRecord($record, $livewire::class))

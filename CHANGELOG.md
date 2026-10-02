@@ -6,3 +6,5 @@ All notable changes to `asignua/filament-relation-manager-tabs` are documented h
 
 - `RelationManagerTab::make()` renders a relation manager as a regular tab of the form's `Tabs`.
 - `RelationManagerTab::many()` builds one tab per manager class.
+- The tab carries the manager's badge, badge colour and badge tooltip, and works on Edit and View pages.
+- Laravel Boost guidelines for coding agents.

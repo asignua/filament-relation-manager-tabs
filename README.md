@@ -17,6 +17,7 @@ managers side by side.
 - [Usage](#usage)
 - [Why not `hasCombinedRelationManagerTabsWithContent()`](#why-not-hascombinedrelationmanagertabswithcontent)
 - [Gotchas](#gotchas)
+- [AI agents](#ai-agents)
 - [Testing](#testing)
 
 ## Requirements
@@ -77,8 +78,12 @@ class TeamResource extends Resource
 ```
 
 `make()` takes the manager class, an optional label (default: the manager's `getTitle()`), an
-optional icon (default: its `getIcon()`) and an optional tab key. The tab respects the manager's
-`canViewForRecord()`.
+optional icon (default: its `getIcon()`) and an optional tab key. Everything else comes from the
+manager, exactly as on a stock relation-manager tab: the badge (`getBadge()`, `getBadgeColor()`,
+`getBadgeTooltip()`) and the visibility (`canViewForRecord()`).
+
+It works the same way on **View** pages: put the tab into the `Tabs` of the infolist (or of the
+form the View page shows).
 
 Several managers at once, with default labels, icons and keys:
 
@@ -116,6 +121,12 @@ manager into the form's own `Tabs`, which is the only way to get a single row.
 - **Nesting inside the edit page `<form>` is fine.** Filament draws the action modal only after
   the action is mounted (a Livewire DOM patch), so the nested form survives. You do not need
   `hasFormWrapper(): false`.
+
+## AI agents
+
+The package ships [Laravel Boost](https://github.com/laravel/boost) guidelines
+(`resources/boost/guidelines/core.blade.php`): with Boost installed, `php artisan boost:install`
+picks them up, so your coding agent knows the rules above.
 
 ## Testing
 
