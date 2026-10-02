@@ -5,6 +5,7 @@
 [![Tests](https://img.shields.io/github/actions/workflow/status/asignua/filament-relation-manager-tabs/tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/asignua/filament-relation-manager-tabs/actions/workflows/tests.yml)
 [![Total Downloads](https://img.shields.io/packagist/dt/asignua/filament-relation-manager-tabs.svg?style=flat-square)](https://packagist.org/packages/asignua/filament-relation-manager-tabs)
 [![License](https://img.shields.io/packagist/l/asignua/filament-relation-manager-tabs.svg?style=flat-square)](https://github.com/asignua/filament-relation-manager-tabs/blob/main/LICENSE.md)
+[![Plumb score](https://plumbphp.dev/badges/asignua/filament-relation-manager-tabs/composite.svg)](https://plumbphp.dev/asignua/filament-relation-manager-tabs)
 
 <img class="filament-hidden" src="https://raw.githubusercontent.com/asignua/filament-relation-manager-tabs/v1.0.0/art/cover.jpg" alt="Filament Relation Manager Tabs">
 
