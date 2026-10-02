@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace Asignua\FilamentRelationManagerTabs;
 
+use Asignua\FilamentRelationManagerTabs\Internal\ManagerReference;
 use BackedEnum;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Resources\RelationManagers\RelationManagerConfiguration;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Text;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
+use InvalidArgumentException;
 use Livewire\Component as LivewireComponent;
 
 /**
@@ -29,53 +31,73 @@ use Livewire\Component as LivewireComponent;
  * queried) only after the section is expanded for the first time. Label, icon and badge come
  * from the manager exactly as on a tab; the section is hidden on the Create page and when
  * `canViewForRecord()` says no. The resource must return `[]` from `getRelations()`.
+ *
+ * A section has no deferred-badge request (that is a `Tabs` feature), so a manager's
+ * `$isBadgeDeferred` does not apply here: the badge is computed with the page, once.
  */
 class RelationManagerSection
 {
     /**
-     * @param class-string<RelationManager> $manager
-     * @param Htmlable|string|null          $label     null = the manager's `getTitle()`
-     * @param BackedEnum|string|null        $icon      null = the manager's `getIcon()`
-     * @param bool                          $collapsed start folded
-     * @param bool|null                     $lazy      true = mount the manager on first expand; false = eager; null = follow the manager
-     * @param string|null                   $key       the section id; null = slug of the class name
+     * @param class-string<RelationManager>|RelationManagerConfiguration $manager   a manager class, or `Manager::make([...])`
+     * @param Htmlable|string|null                                       $label     null = the manager's `getTitle()`
+     * @param BackedEnum|string|null                                     $icon      null = the manager's `getIcon()`
+     * @param bool                                                       $collapsed start folded
+     * @param bool|null                                                  $lazy      true = mount the manager on first expand; false = eager; null = follow the manager
+     * @param string|null                                                $key       the section id (letters, digits, `-`, `_`, `.`); null = slug of the class name
+     *
+     * @throws InvalidArgumentException when `$key` holds a character outside that set
      */
     public static function make(
-        string $manager,
+        string|RelationManagerConfiguration $manager,
         string|Htmlable|null $label = null,
         string|BackedEnum|null $icon = null,
         bool $collapsed = true,
         ?bool $lazy = true,
         ?string $key = null,
     ): Section {
-        $key ??= 'relation-manager-'.Str::slug(class_basename($manager));
+        $class = ManagerReference::className($manager);
+        $key = ManagerReference::key($class, $key);
+
+        // The badge is needed twice per render (whether to show it, and its text); `getBadge()`
+        // often runs a query, so it is computed once per owner record and page.
+        $badges = [];
+        $badge = static function (?Model $record, LivewireComponent $livewire) use ($class, &$badges): ?string {
+            if (!$record instanceof Model) {
+                return null;
+            }
+
+            $memoKey = spl_object_id($record).'|'.spl_object_id($livewire);
+
+            if (!array_key_exists($memoKey, $badges)) {
+                $badges[$memoKey] = $class::getBadge($record, $livewire::class);
+            }
+
+            return $badges[$memoKey];
+        };
 
         return Section::make(
             $label ?? static fn (?Model $record, LivewireComponent $livewire): ?string => $record
-                ? $manager::getTitle($record, $livewire::class)
+                ? $class::getTitle($record, $livewire::class)
                 : null,
         )
             ->key($key)
             ->id($key)
             ->icon($icon ?? static fn (?Model $record, LivewireComponent $livewire): mixed => $record
-                ? $manager::getIcon($record, $livewire::class)
+                ? $class::getIcon($record, $livewire::class)
                 : null)
             ->collapsible()
             ->collapsed($collapsed)
             ->afterHeader([
-                Text::make(static fn (?Model $record, LivewireComponent $livewire): ?string => $record
-                    ? $manager::getBadge($record, $livewire::class)
-                    : null)
+                Text::make($badge)
                     ->badge()
                     ->color(static fn (?Model $record, LivewireComponent $livewire): ?string => $record
-                        ? $manager::getBadgeColor($record, $livewire::class)
+                        ? $class::getBadgeColor($record, $livewire::class)
                         : null)
-                    ->visible(static fn (?Model $record, LivewireComponent $livewire): bool => $record instanceof Model
-                        && filled($manager::getBadge($record, $livewire::class))),
+                    ->visible(static fn (?Model $record, LivewireComponent $livewire): bool => filled($badge($record, $livewire))),
             ])
             ->visible(static fn (?Model $record, LivewireComponent $livewire): bool => $record instanceof Model
                 && $record->exists
-                && $manager::canViewForRecord($record, $livewire::class))
+                && $class::canViewForRecord($record, $livewire::class))
             ->schema([
                 RelationManagerTab::livewire($manager, $lazy),
             ]);

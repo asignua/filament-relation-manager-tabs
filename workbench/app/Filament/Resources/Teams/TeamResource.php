@@ -17,6 +17,7 @@ use Workbench\App\Filament\Resources\Teams\Pages\CreateTeam;
 use Workbench\App\Filament\Resources\Teams\Pages\EditTeam;
 use Workbench\App\Filament\Resources\Teams\Pages\ListTeams;
 use Workbench\App\Filament\Resources\Teams\Pages\ViewTeam;
+use Workbench\App\Filament\Resources\Teams\RelationManagers\DeferredBadgePostsRelationManager;
 use Workbench\App\Filament\Resources\Teams\RelationManagers\ForcedEagerPostsRelationManager;
 use Workbench\App\Filament\Resources\Teams\RelationManagers\HiddenPostsRelationManager;
 use Workbench\App\Filament\Resources\Teams\RelationManagers\LazyPostsRelationManager;
@@ -39,6 +40,7 @@ class TeamResource extends Resource
                 RelationManagerTab::make(HiddenPostsRelationManager::class),
                 RelationManagerTab::make(LazyPostsRelationManager::class, lazy: true),
                 RelationManagerTab::make(ForcedEagerPostsRelationManager::class, lazy: false),
+                RelationManagerTab::make(DeferredBadgePostsRelationManager::class),
             ])->columnSpanFull(),
             RelationManagerSection::make(SectionPostsRelationManager::class)->columnSpanFull(),
         ]);

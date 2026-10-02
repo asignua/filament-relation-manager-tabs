@@ -4,12 +4,18 @@ declare(strict_types=1);
 
 namespace Asignua\FilamentRelationManagerTabs\Tests;
 
+use Asignua\FilamentRelationManagerTabs\RelationManagerSection;
 use Asignua\FilamentRelationManagerTabs\RelationManagerTab;
 use Filament\Schemas\Components\Tabs;
+use Filament\Support\Enums\IconPosition;
+use InvalidArgumentException;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Workbench\App\Filament\Resources\Teams\Pages\CreateTeam;
 use Workbench\App\Filament\Resources\Teams\Pages\EditTeam;
+use Workbench\App\Filament\Resources\Teams\Pages\TranslatableEditTeam;
 use Workbench\App\Filament\Resources\Teams\Pages\ViewTeam;
+use Workbench\App\Filament\Resources\Teams\RelationManagers\DeferredBadgePostsRelationManager;
 use Workbench\App\Filament\Resources\Teams\RelationManagers\HiddenPostsRelationManager;
 use Workbench\App\Filament\Resources\Teams\RelationManagers\PostsRelationManager;
 use Workbench\App\Models\Post;
@@ -167,6 +173,97 @@ class RelationManagerTabTest extends TestCase
         $this->assertContains('relation-manager-postsrelationmanager', $this->buttonKeys($html));
         $this->assertContains('overview::tab', $this->buttonKeys($html)); // the infolist's own tab
         $this->assertStringContainsString('RelationManagers\\PostsRelationManager', $html);
+    }
+
+    public function test_deferred_badge_is_not_computed_with_the_page(): void
+    {
+        $team = $this->team();
+        DeferredBadgePostsRelationManager::$badgeCalls = 0;
+
+        $component = Livewire::test(EditTeam::class, ['record' => $team->getRouteKey()]);
+
+        $this->assertStringNotContainsString('late#', $component->html());
+        $this->assertSame(0, DeferredBadgePostsRelationManager::$badgeCalls);
+
+        /** @var Tabs $tabs */
+        $tabs = $component->instance()->form->getComponents()[0];
+        $badges = $tabs->getDeferredTabBadges();
+
+        // only the deferred tab is fetched later, and it gets its real badge then
+        $this->assertCount(1, $badges, implode(', ', array_keys($badges)));
+        $this->assertSame('late#2', array_values($badges)[0]['badge']);
+    }
+
+    public function test_tab_takes_the_icon_position_from_the_manager(): void
+    {
+        $this->assertSame(IconPosition::After, $this->editTab(DeferredBadgePostsRelationManager::class)->getIconPosition());
+        $this->assertSame(IconPosition::Before, $this->editTab(PostsRelationManager::class)->getIconPosition());
+    }
+
+    public function test_active_locale_of_the_page_reaches_the_manager(): void
+    {
+        $team = $this->team();
+
+        $translatable = Livewire::test(TranslatableEditTeam::class, ['record' => $team->getRouteKey()])->instance();
+        $component = RelationManagerTab::livewire(PostsRelationManager::class);
+        $component->container($translatable->form);
+        $this->assertSame('uk', $component->getData()['activeLocale'] ?? null);
+
+        $plain = Livewire::test(EditTeam::class, ['record' => $team->getRouteKey()])->instance();
+        $component = RelationManagerTab::livewire(PostsRelationManager::class);
+        $component->container($plain->form);
+        $this->assertArrayNotHasKey('activeLocale', $component->getData());
+    }
+
+    public function test_configured_manager_passes_its_properties(): void
+    {
+        $team = $this->team();
+        $page = Livewire::test(EditTeam::class, ['record' => $team->getRouteKey()])->instance();
+
+        $tab = RelationManagerTab::make(PostsRelationManager::make(['tableSearch' => 'First']));
+        $this->assertSame('relation-manager-postsrelationmanager', $tab->getKey(isAbsolute: false));
+
+        $component = RelationManagerTab::livewire(PostsRelationManager::make(['tableSearch' => 'First']), lazy: false);
+        $component->container($page->form);
+        $data = $component->getData();
+
+        $this->assertSame('First', $data['tableSearch']);
+        $this->assertSame(EditTeam::class, $data['pageClass']);
+        $this->assertArrayNotHasKey('lazy', $data);
+    }
+
+    /**
+     * @return array<string, array{0: string}>
+     */
+    public static function invalidKeys(): array
+    {
+        return [
+            'backslash' => ['App\\Posts'],
+            'quote' => ["posts' + alert(1) + '"],
+            'space' => ['my posts'],
+            'empty' => [''],
+        ];
+    }
+
+    #[DataProvider('invalidKeys')]
+    public function test_a_key_alpine_cannot_take_is_rejected(string $key): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        RelationManagerTab::make(PostsRelationManager::class, key: $key);
+    }
+
+    #[DataProvider('invalidKeys')]
+    public function test_a_section_key_alpine_cannot_take_is_rejected(string $key): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        RelationManagerSection::make(PostsRelationManager::class, key: $key);
+    }
+
+    public function test_valid_custom_keys_are_accepted(): void
+    {
+        $this->assertSame('posts_v2.tab', RelationManagerTab::make(PostsRelationManager::class, key: 'posts_v2.tab')->getKey(isAbsolute: false));
     }
 
     /**

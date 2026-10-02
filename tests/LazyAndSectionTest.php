@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 use Workbench\App\Filament\Resources\Teams\Pages\CreateTeam;
 use Workbench\App\Filament\Resources\Teams\Pages\EditTeam;
+use Workbench\App\Filament\Resources\Teams\Pages\ViewTeam;
 use Workbench\App\Filament\Resources\Teams\RelationManagers\HiddenPostsRelationManager;
 use Workbench\App\Filament\Resources\Teams\RelationManagers\LazyPostsRelationManager;
 use Workbench\App\Filament\Resources\Teams\RelationManagers\SectionPostsRelationManager;
@@ -48,16 +49,17 @@ class LazyAndSectionTest extends TestCase
     }
 
     /**
-     * The first `<tag …>` carrying the manager's snapshot in the page HTML.
+     * The manager's own markup: from its snapshot up to the next component's snapshot, so a
+     * neighbour's placeholder can never leak in.
      */
     private function segment(string $html, string $manager): string
     {
         $position = strpos($html, 'RelationManagers\\'.$manager.'" wire:snapshot');
         $this->assertNotFalse($position, $manager.' is not in the page');
 
-        $end = strpos($html, 'wire:name', $position);
+        $end = strpos($html, 'wire:snapshot', $position + strlen($manager) + 40);
 
-        return substr($html, $position, ($end === false ? 3000 : $end - $position + 20000));
+        return $end === false ? substr($html, $position) : substr($html, $position, $end - $position);
     }
 
     private function isPlaceholder(string $html, string $manager): bool
@@ -89,8 +91,8 @@ class LazyAndSectionTest extends TestCase
             $page = Livewire::test(EditTeam::class, ['record' => $team->getRouteKey()]);
         });
 
-        // Only the eagerly mounted manager may list posts on the initial render.
-        $this->assertLessThanOrEqual(1, count($initial));
+        // Only the eagerly mounted manager lists posts on the initial render.
+        $this->assertCount(1, $initial);
 
         $html = $page->html();
         // exactly one table (the eager one) has rendered its rows
@@ -174,7 +176,37 @@ class LazyAndSectionTest extends TestCase
         $team = $this->team();
         $html = Livewire::test(EditTeam::class, ['record' => $team->getRouteKey()])->html();
 
-        $this->assertStringContainsString('fi-badge', $html);
+        // the section's own header: from its id up to the manager it wraps
+        $start = strpos($html, 'id="relation-manager-sectionpostsrelationmanager"');
+        $end = strpos($html, 'RelationManagers\\SectionPostsRelationManager" wire:snapshot');
+        $this->assertNotFalse($start);
+        $this->assertNotFalse($end);
+        $header = substr($html, $start, $end - $start);
+
+        $this->assertStringContainsString('fi-badge', $header);
+        $this->assertMatchesRegularExpression('/fi-badge[^>]*>\s*(<[^>]*>\s*)*1\s*</', $header);
+    }
+
+    public function test_section_computes_the_badge_once_per_render(): void
+    {
+        $team = $this->team();
+        SectionPostsRelationManager::$badgeCalls = 0;
+
+        Livewire::test(EditTeam::class, ['record' => $team->getRouteKey()]);
+
+        $this->assertSame(1, SectionPostsRelationManager::$badgeCalls);
+    }
+
+    public function test_section_works_on_the_view_page(): void
+    {
+        $team = $this->team();
+        $page = Livewire::test(ViewTeam::class, ['record' => $team->getRouteKey()])->instance();
+
+        $section = RelationManagerSection::make(SectionPostsRelationManager::class);
+        $section->container($page->infolist);
+
+        $this->assertTrue($section->isVisible());
+        $this->assertSame('Section posts', $section->getHeading());
     }
 
     public function test_tab_livewire_component_is_built(): void
