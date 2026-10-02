@@ -12,6 +12,7 @@ Render a [Filament](https://filamentphp.com) relation manager as an ordinary tab
 form. The edit page then has exactly **one row of tabs**: the form's own tabs and your relation
 managers side by side.
 
+- [Screenshots](#screenshots)
 - [Requirements](#requirements)
 - [Installation](#installation)
 - [Usage](#usage)
@@ -19,6 +20,24 @@ managers side by side.
 - [Gotchas](#gotchas)
 - [AI agents](#ai-agents)
 - [Testing](#testing)
+
+## Screenshots
+
+One row of tabs — the form's own tabs and the relation managers side by side, with their badges:
+
+![Relation managers as form tabs](https://raw.githubusercontent.com/asignua/filament-relation-manager-tabs/v1.0.0/art/tasks-tab.jpg)
+
+The same page in dark mode:
+
+![Dark mode](https://raw.githubusercontent.com/asignua/filament-relation-manager-tabs/v1.0.0/art/tasks-tab-dark.jpg)
+
+The form tabs work as usual:
+
+![The Details tab](https://raw.githubusercontent.com/asignua/filament-relation-manager-tabs/v1.0.0/art/details-tab.jpg)
+
+For comparison, stock Filament — the managers get a second row of tabs under the form:
+
+![Stock Filament: a second row of tabs under the form](https://raw.githubusercontent.com/asignua/filament-relation-manager-tabs/v1.0.0/art/stock-filament.jpg)
 
 ## Requirements
 
