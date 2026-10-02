@@ -187,6 +187,21 @@ class LazyAndSectionTest extends TestCase
         $this->assertMatchesRegularExpression('/fi-badge[^>]*>\s*(<[^>]*>\s*)*1\s*</', $header);
     }
 
+    public function test_section_badge_carries_the_manager_tooltip(): void
+    {
+        $team = $this->team();
+        $html = Livewire::test(EditTeam::class, ['record' => $team->getRouteKey()])->html();
+
+        $start = strpos($html, 'id="relation-manager-sectionpostsrelationmanager"');
+        $end = strpos($html, 'RelationManagers\\SectionPostsRelationManager" wire:snapshot');
+        $this->assertNotFalse($start);
+        $this->assertNotFalse($end);
+        $header = substr($html, $start, $end - $start);
+
+        $this->assertStringContainsString('x-tooltip', $header);
+        $this->assertStringContainsString('Published posts', $header);
+    }
+
     public function test_section_computes_the_badge_once_per_render(): void
     {
         $team = $this->team();

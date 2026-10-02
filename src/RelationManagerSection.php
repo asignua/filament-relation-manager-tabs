@@ -29,7 +29,8 @@ use Livewire\Component as LivewireComponent;
  *
  * By default the section starts collapsed and is LAZY: the manager is mounted (and its table
  * queried) only after the section is expanded for the first time. Label, icon and badge come
- * from the manager exactly as on a tab; the section is hidden on the Create page and when
+ * (with the badge colour and tooltip) from the manager as on a tab — a `Section` has no
+ * icon position, so the manager's `getIconPosition()` does not apply; the section is hidden on the Create page and when
  * `canViewForRecord()` says no. The resource must return `[]` from `getRelations()`.
  *
  * A section has no deferred-badge request (that is a `Tabs` feature), so a manager's
@@ -43,9 +44,9 @@ class RelationManagerSection
      * @param BackedEnum|string|null                                     $icon      null = the manager's `getIcon()`
      * @param bool                                                       $collapsed start folded
      * @param bool|null                                                  $lazy      true = mount the manager on first expand; false = eager; null = follow the manager
-     * @param string|null                                                $key       the section id (letters, digits, `-`, `_`, `.`); null = slug of the class name
+     * @param string|null                                                $key       the section id (no `\`, quotes, backtick, `<`, `>` or control characters); null = slug of the class name
      *
-     * @throws InvalidArgumentException when `$key` holds a character outside that set
+     * @throws InvalidArgumentException when `$key` is empty or holds one of those characters
      */
     public static function make(
         string|RelationManagerConfiguration $manager,
@@ -59,14 +60,17 @@ class RelationManagerSection
         $key = ManagerReference::key($class, $key);
 
         // The badge is needed twice per render (whether to show it, and its text); `getBadge()`
-        // often runs a query, so it is computed once per owner record and page.
+        // often runs a query, so it is computed once per owner record (class + key) and page
+        // class. The memo lives as long as this Section object, i.e. one request: a badge read
+        // before a page action in the same request is served unchanged after it, which is
+        // accepted (the next request recomputes it).
         $badges = [];
         $badge = static function (?Model $record, LivewireComponent $livewire) use ($class, &$badges): ?string {
             if (!$record instanceof Model) {
                 return null;
             }
 
-            $memoKey = spl_object_id($record).'|'.spl_object_id($livewire);
+            $memoKey = $record::class.'|'.$record->getKey().'|'.$livewire::class;
 
             if (!array_key_exists($memoKey, $badges)) {
                 $badges[$memoKey] = $class::getBadge($record, $livewire::class);
@@ -92,6 +96,9 @@ class RelationManagerSection
                     ->badge()
                     ->color(static fn (?Model $record, LivewireComponent $livewire): ?string => $record
                         ? $class::getBadgeColor($record, $livewire::class)
+                        : null)
+                    ->tooltip(static fn (?Model $record, LivewireComponent $livewire): string|Htmlable|null => $record
+                        ? $class::getBadgeTooltip($record, $livewire::class)
                         : null)
                     ->visible(static fn (?Model $record, LivewireComponent $livewire): bool => filled($badge($record, $livewire))),
             ])
