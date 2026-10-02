@@ -18,11 +18,15 @@ use InvalidArgumentException;
 final class ManagerReference
 {
     /**
-     * Filament pastes the key raw into an Alpine string (`x-on:click="tab = '<key>'"`) and
-     * double-escaped into the panel, so anything beyond these characters either opens an
-     * empty tab (a backslash) or breaks the expression (a quote).
+     * Characters a key must not hold. A backslash starts a JS escape in the tab button
+     * (`x-on:click="tab = '<key>'"`) but not in the JSON-encoded panel, so the tab opens
+     * empty. The rest — `<`, `>`, quotes, backtick, control characters — are what Filament
+     * (since 5.x key sanitising) silently strips from keys and ids, so the key in the DOM and
+     * in the URL would not be the one you passed; on Filament versions before that sanitising
+     * a quote broke the Alpine expression outright. Everything else — spaces, `:`, `&`,
+     * non-ASCII letters — reaches both sides as the same plain string, as in v1.0.0.
      */
-    private const KEY_PATTERN = '/^[A-Za-z0-9_.\-]+$/';
+    private const FORBIDDEN_KEY_CHARACTERS = '/[\\\\<>"\'`\x00-\x1F\x7F]/';
 
     /**
      * @param class-string<RelationManager>|RelationManagerConfiguration $manager
@@ -58,9 +62,9 @@ final class ManagerReference
             return 'relation-manager-'.Str::slug(class_basename($manager));
         }
 
-        if (preg_match(self::KEY_PATTERN, $key) !== 1) {
+        if ($key === '' || preg_match(self::FORBIDDEN_KEY_CHARACTERS, $key) === 1) {
             throw new InvalidArgumentException(sprintf(
-                'The key "%s" of the relation manager %s may contain only letters, digits, "-", "_" and ".": Filament pastes it into an Alpine expression as is.',
+                'The key "%s" of the relation manager %s must be non-empty and contain no backslash, quote, backtick, angle bracket or control character: Filament pastes it into an Alpine string, or strips such characters.',
                 $key,
                 $manager,
             ));

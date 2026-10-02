@@ -11,7 +11,7 @@ All notable changes to `asignua/filament-relation-manager-tabs` are documented h
 - The embedded manager receives the page's `activeLocale` (spatie-translatable locale switcher), as in the stock block.
 - `make()`, `many()`, `livewire()` and `RelationManagerSection::make()` also accept a `Manager::make([...])` configuration; its properties are passed to the manager.
 - The section computes the manager's badge once per render instead of twice.
-- A custom `key:` with characters other than letters, digits, `-`, `_` and `.` now throws `InvalidArgumentException`. Such keys never worked: Filament pastes the key into an Alpine expression, so a backslash opened an empty tab and a quote broke the expression.
+- **Behaviour change:** a custom `key:` that is empty or contains a backslash, a quote (`'`, `"`), a backtick, `<`, `>` or a control character now throws `InvalidArgumentException` (at form build, so the page fails loudly instead of misbehaving). A backslash never worked (the tab opened empty, with no console error). The other characters either broke the Alpine expression (Filament releases before its key sanitising) or are silently stripped by Filament, so the key in the DOM and the URL differed from the one passed. Every other key accepted by v1.0.0 (spaces, `:`, non-ASCII letters…) is still accepted.
 
 ## v1.0.0 - 2026-10-02
 

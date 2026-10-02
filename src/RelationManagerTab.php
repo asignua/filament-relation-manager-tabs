@@ -47,8 +47,8 @@ use Livewire\Component as LivewireComponent;
  *    sequences, so `tab` becomes `…AppFilamentEegnith…` while the panel waits for
  *    `…App\Filament\Eegnith…`. The tab opens EMPTY, with no console error. So the default
  *    key is the slug of the class basename; pass your own (shorter — with
- *    `persistTabInQueryString()` it ends up in the URL) as an argument; a key with any
- *    character beyond letters, digits, `-`, `_` and `.` is rejected.
+ *    `persistTabInQueryString()` it ends up in the URL) as an argument; an empty key, or one
+ *    holding a backslash, a quote, a backtick, `<`, `>` or a control character, is rejected.
  * 3. **The manager renders INSIDE the edit page `<form>`, and that is fine.** Filament draws
  *    the action modal only once the action is mounted, i.e. by a Livewire DOM patch, not in
  *    the initial HTML — so the nested `<form wire:submit="callMountedAction">` survives in
@@ -62,7 +62,7 @@ class RelationManagerTab
      *                                                                            `Manager::make([...])` to pass it properties
      * @param Htmlable|string|null                                       $label   the label; null = the manager's `getTitle()`
      * @param BackedEnum|string|null                                     $icon    the icon; null = the manager's `getIcon()`
-     * @param string|null                                                $key     the tab key (letters, digits, `-`, `_`, `.`);
+     * @param string|null                                                $key     the tab key (no `\`, quotes, backtick, `<`, `>` or control characters);
      *                                                                            null = slug of the class name
      * @param bool|null                                                  $lazy    null = follow the manager's `$isLazy` (Filament's
      *                                                                            default is lazy); true = force lazy; false = force eager

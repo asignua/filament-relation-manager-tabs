@@ -184,7 +184,8 @@ $schema->components([
 ]);
 ```
 
-The heading, icon and badge come from the manager like on a tab; the section is hidden on Create
+The heading, icon, badge, badge colour and badge tooltip come from the manager like on a tab (a
+`Section` has no icon position, so `getIconPosition()` does not apply); the section is hidden on Create
 and when `canViewForRecord()` is false. By default it starts **collapsed** and **lazy** (the
 manager is mounted on first expand). It returns a regular `Filament\Schemas\Components\Section`,
 so `->columnSpanFull()`, `->description()`, `->persistCollapsed()` and so on still work. The
@@ -208,8 +209,11 @@ manager into the form's own `Tabs`, which is the only way to get a single row.
   holding a class name (backslashes) makes the two diverge: `\F`, `\E`, `\U` become JS escape
   sequences in the button, and the tab opens **empty, with no console error**. The default key is
   the slug of the class basename (`relation-manager-postsrelationmanager`). Pass your own `key:`
-  when you use `persistTabInQueryString()`, because the key ends up in the URL. A custom key may
-  contain only letters, digits, `-`, `_` and `.`; anything else throws `InvalidArgumentException`.
+  when you use `persistTabInQueryString()`, because the key ends up in the URL. A custom key must
+  not be empty and must not contain a backslash, a quote (`'`, `"`), a backtick, `<`, `>` or a
+  control character; such a key throws `InvalidArgumentException`. A backslash opens an empty tab,
+  and Filament silently strips the rest from keys, so the key in the DOM and the URL would not be
+  yours. Spaces, `:`, non-ASCII letters and the like are fine.
 - **Two managers with the same class basename** (`Blog\PostsRelationManager` and
   `Shop\PostsRelationManager`) get the same default key. On one page, pass `key:` to at least one
   of them, or the tabs (or section ids) collide.

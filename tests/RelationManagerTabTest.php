@@ -240,9 +240,40 @@ class RelationManagerTabTest extends TestCase
         return [
             'backslash' => ['App\\Posts'],
             'quote' => ["posts' + alert(1) + '"],
-            'space' => ['my posts'],
+            'double quote' => ['my "posts"'],
+            'backtick' => ['posts`'],
+            'angle bracket' => ['<posts>'],
+            'line break' => ["posts\nmore"],
             'empty' => [''],
         ];
+    }
+
+    /**
+     * Keys v1.0.0 accepted and Filament renders unchanged — a minor release must keep them.
+     *
+     * @return array<string, array{0: string}>
+     */
+    public static function validKeys(): array
+    {
+        return [
+            'slug' => ['posts_v2.tab'],
+            'space' => ['my posts'],
+            'colon' => ['posts::tab'],
+            'non-ascii' => ['пости'],
+            'ampersand' => ['posts&comments'],
+        ];
+    }
+
+    #[DataProvider('validKeys')]
+    public function test_a_key_that_worked_in_v1_is_still_accepted(string $key): void
+    {
+        $this->assertSame($key, RelationManagerTab::make(PostsRelationManager::class, key: $key)->getKey(isAbsolute: false));
+    }
+
+    #[DataProvider('validKeys')]
+    public function test_a_section_key_that_worked_in_v1_is_still_accepted(string $key): void
+    {
+        $this->assertSame($key, RelationManagerSection::make(PostsRelationManager::class, key: $key)->getKey(isAbsolute: false));
     }
 
     #[DataProvider('invalidKeys')]
@@ -259,11 +290,6 @@ class RelationManagerTabTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
 
         RelationManagerSection::make(PostsRelationManager::class, key: $key);
-    }
-
-    public function test_valid_custom_keys_are_accepted(): void
-    {
-        $this->assertSame('posts_v2.tab', RelationManagerTab::make(PostsRelationManager::class, key: 'posts_v2.tab')->getKey(isAbsolute: false));
     }
 
     /**
