@@ -44,11 +44,11 @@ For comparison, stock Filament — the managers get a second row of tabs under t
 
 A `RelationManagerSection` starts collapsed - nothing is loaded:
 
-![A collapsed relation-manager section](https://raw.githubusercontent.com/asignua/filament-relation-manager-tabs/v1.1.0/art/section-collapsed.jpg)
+![A collapsed relation-manager section](https://raw.githubusercontent.com/asignua/filament-relation-manager-tabs/main/art/section-collapsed.jpg)
 
 Expanding it mounts the manager on demand:
 
-![The expanded section](https://raw.githubusercontent.com/asignua/filament-relation-manager-tabs/v1.1.0/art/section-expanded.jpg)
+![The expanded section](https://raw.githubusercontent.com/asignua/filament-relation-manager-tabs/main/art/section-expanded.jpg)
 
 ## Requirements
 
@@ -109,8 +109,21 @@ class TeamResource extends Resource
 
 `make()` takes the manager class, an optional label (default: the manager's `getTitle()`), an
 optional icon (default: its `getIcon()`) and an optional tab key. Everything else comes from the
-manager, exactly as on a stock relation-manager tab: the badge (`getBadge()`, `getBadgeColor()`,
-`getBadgeTooltip()`) and the visibility (`canViewForRecord()`).
+manager, exactly as on a stock relation-manager tab: the icon position (`getIconPosition()`), the
+badge (`getBadge()`, `getBadgeColor()`, `getBadgeTooltip()`, and `$isBadgeDeferred`) and the
+visibility (`canViewForRecord()`). The manager receives the same data as in the stock block,
+including the page's `activeLocale` when the page uses a locale switcher (spatie-translatable).
+
+To pass properties to the manager, give `make()` a configuration instead of a class name, as in
+stock `getRelations()`:
+
+```php
+RelationManagerTab::make(PostsRelationManager::make(['status' => 'draft']));
+```
+
+`RelationGroup` (several managers under one stock tab) is not supported: give each manager its
+own tab. A manager's overridden `getTabComponent()` is not used either; the tab is built from the
+static getters listed above.
 
 It works the same way on **View** pages: put the tab into the `Tabs` of the infolist (or of the
 form the View page shows).
@@ -146,7 +159,9 @@ RelationManagerTab::many([...], lazy: true);
 A lazy manager mounts when its placeholder enters the viewport, so a section expanded *below the fold* loads when you scroll to it, not at the click.
 
 Note that the tab **badge** is computed by the parent page, so a `getBadge()` that runs a query
-still runs on the initial render — use `$isBadgeDeferred` on the manager if that matters.
+still runs on the initial render. Set `$isBadgeDeferred = true` on the manager if that matters: the
+tab then renders without the badge and fetches it in a separate request, as a stock tab does. A
+section has no such request, so in a section the badge is always computed with the page (once).
 
 ## Collapsible sections
 
@@ -193,7 +208,11 @@ manager into the form's own `Tabs`, which is the only way to get a single row.
   holding a class name (backslashes) makes the two diverge: `\F`, `\E`, `\U` become JS escape
   sequences in the button, and the tab opens **empty, with no console error**. The default key is
   the slug of the class basename (`relation-manager-postsrelationmanager`). Pass your own `key:`
-  when you use `persistTabInQueryString()`, because the key ends up in the URL.
+  when you use `persistTabInQueryString()`, because the key ends up in the URL. A custom key may
+  contain only letters, digits, `-`, `_` and `.`; anything else throws `InvalidArgumentException`.
+- **Two managers with the same class basename** (`Blog\PostsRelationManager` and
+  `Shop\PostsRelationManager`) get the same default key. On one page, pass `key:` to at least one
+  of them, or the tabs (or section ids) collide.
 - **Do not also return the manager from `getRelations()`** (stock Filament renders whatever it
   returns as a block under the form). A manager left registered there is rendered twice: once as
   your tab or section and once as the stock block.

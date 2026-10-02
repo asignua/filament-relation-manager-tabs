@@ -2,6 +2,6 @@
 
 - `Asignua\FilamentRelationManagerTabs\RelationManagerTab::make(XRelationManager::class)` returns a `Tabs\Tab` to put into the form's (or the View page's) own `Tabs`, so the record page has ONE row of tabs. `RelationManagerTab::many([...])` makes one tab per manager.
 - Remove the manager from the resource's `getRelations()` — otherwise it renders twice (tab + block under the form).
-- Never pass a class name as `key:` — the tab must be a slug (a key with backslashes opens an EMPTY tab, no console error). Default key: `relation-manager-<classbasename slug>`.
+- Never pass a class name as `key:` — the tab must be a slug (a key with backslashes opens an EMPTY tab, no console error). Default key: `relation-manager-<classbasename slug>`; a custom key outside `[A-Za-z0-9_.-]` throws `InvalidArgumentException`. Two managers with the same basename on one page need a custom `key:`. A manager with `$isBadgeDeferred = true` gets its tab badge after the page renders.
 - The tab is hidden on Create (no owner record yet) and when `canViewForRecord()` is false; label, icon and badge come from the manager's `getTitle()`, `getIcon()`, `getBadge()`/`getBadgeColor()`/`getBadgeTooltip()`.
 - `RelationManagerSection::make(XRelationManager::class)` puts the manager in a collapsible `Section` (collapsed + lazy by default, hidden on Create). `lazy:` (null = follow the manager, true/false = force) works on tabs and sections; Filament managers are lazy by default, so a closed tab/section mounts nothing until opened.
