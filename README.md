@@ -44,11 +44,11 @@ For comparison, stock Filament — the managers get a second row of tabs under t
 
 A `RelationManagerSection` starts collapsed - nothing is loaded:
 
-![A collapsed relation-manager section](https://raw.githubusercontent.com/asignua/filament-relation-manager-tabs/main/art/section-collapsed.jpg)
+![A collapsed relation-manager section](https://raw.githubusercontent.com/asignua/filament-relation-manager-tabs/v1.1.0/art/section-collapsed.jpg)
 
 Expanding it mounts the manager on demand:
 
-![The expanded section](https://raw.githubusercontent.com/asignua/filament-relation-manager-tabs/main/art/section-expanded.jpg)
+![The expanded section](https://raw.githubusercontent.com/asignua/filament-relation-manager-tabs/v1.1.0/art/section-expanded.jpg)
 
 ## Requirements
 
