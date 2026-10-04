@@ -2,6 +2,10 @@
 
 All notable changes to `asignua/filament-relation-manager-tabs` are documented here.
 
+## Unreleased
+
+- Laravel Boost guideline: the custom `key:` rule now matches the code and the README (empty, backslash, quote, backtick, angle bracket or control character throws; everything else is accepted). It still described an earlier, stricter rule (`[A-Za-z0-9_.-]` only) that the code never shipped.
+
 ## v1.1.0 - 2026-10-03
 
 - `RelationManagerSection::make()` puts a relation manager into a collapsible `Section` (collapsed by default, lazy by default; label, icon and badge from the manager; hidden on Create and by `canViewForRecord()`).

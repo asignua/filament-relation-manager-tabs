@@ -293,6 +293,21 @@ class RelationManagerTabTest extends TestCase
     }
 
     /**
+     * The Boost guideline is read by coding agents: it must state the key rule the code
+     * enforces, not the stricter slug-only rule of v1.0.0.
+     */
+    public function test_the_boost_guideline_states_the_enforced_key_rule(): void
+    {
+        $guideline = (string) file_get_contents(dirname(__DIR__).'/resources/boost/guidelines/core.blade.php');
+
+        $this->assertStringNotContainsString('[A-Za-z0-9_.-]', $guideline);
+
+        foreach (['empty', 'backslash', 'quote', 'backtick', 'angle bracket', 'control character'] as $rule) {
+            $this->assertStringContainsString($rule, $guideline);
+        }
+    }
+
+    /**
      * The evaluated tab as the Edit page sees it — badge closures need the record and the page.
      */
     private function editTab(string $manager): Tabs\Tab
