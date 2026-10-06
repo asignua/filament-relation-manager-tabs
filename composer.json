@@ -1,6 +1,6 @@
 {
     "name": "asignua/filament-relation-manager-tabs",
-    "description": "Render Filament relation managers as ordinary tabs of the record form, so an edit page has exactly one row of tabs.",
+    "description": "Render Filament 5 relation managers as ordinary tabs of the record form: put RelationManagerTab::make(Manager::class) into the form's Tabs and the edit page has exactly one row of tabs — your form tabs and relation managers side by side — instead of a second row of tabs under the form. Lazy loading of the manager, collapsible sections, works on edit and view pages, no Filament view overridden.",
     "keywords": ["filament", "filament-plugin", "laravel", "relation-manager", "tabs"],
     "homepage": "https://github.com/asignua/filament-relation-manager-tabs",
     "support": {
