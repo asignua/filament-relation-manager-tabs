@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Asignua\FilamentRelationManagerTabs\Internal;
 
+use Closure;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Resources\RelationManagers\RelationManagerConfiguration;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
+use Livewire\Component as LivewireComponent;
 
 /**
  * Shared plumbing of the tab and the section: the manager class behind a reference, the
@@ -23,10 +26,13 @@ final class ManagerReference
      * empty. The rest — `<`, `>`, quotes, backtick, control characters — are what Filament
      * (since 5.x key sanitising) silently strips from keys and ids, so the key in the DOM and
      * in the URL would not be the one you passed; on Filament versions before that sanitising
-     * a quote broke the Alpine expression outright. Everything else — spaces, `:`, `&`,
-     * non-ASCII letters — reaches both sides as the same plain string, as in v1.0.0.
+     * a quote broke the Alpine expression outright. An ampersand
+     * is rejected too: the browser decodes character references (`a&lt;b`) in the button's
+     * Alpine attribute, while the panel gets the JSON-encoded key, so the two diverge and the
+     * tab opens empty. Everything else — spaces, `:`, non-ASCII letters — reaches both sides
+     * as the same plain string.
      */
-    private const FORBIDDEN_KEY_CHARACTERS = '/[\\\\<>"\'`\x00-\x1F\x7F]/';
+    private const FORBIDDEN_KEY_CHARACTERS = '/[\\\\<>&"\'`\x00-\x1F\x7F]/';
 
     /**
      * @param class-string<RelationManager>|RelationManagerConfiguration $manager
@@ -64,12 +70,43 @@ final class ManagerReference
 
         if ($key === '' || preg_match(self::FORBIDDEN_KEY_CHARACTERS, $key) === 1) {
             throw new InvalidArgumentException(sprintf(
-                'The key "%s" of the relation manager %s must be non-empty and contain no backslash, quote, backtick, angle bracket or control character: Filament pastes it into an Alpine string, or strips such characters.',
+                'The key "%s" of the relation manager %s must be non-empty and contain no backslash, quote, backtick, ampersand, angle bracket or control character: Filament pastes it into an Alpine string, or strips such characters.',
                 $key,
                 $manager,
             ));
         }
 
         return $key;
+    }
+
+    /**
+     * Wraps a per-record resolver (badge, colour, tooltip) so it runs once per owner record and
+     * page class instead of on every read: `Tabs` reads each tab's badge up to three times per
+     * render (nav, dropdown trigger, dropdown list), and `getBadge()` usually runs a query. The
+     * memo lives as long as the returned closure, i.e. one request.
+     *
+     * @template TValue
+     *
+     * @param Closure(Model, string): TValue $resolve receives the owner record and the page class
+     *
+     * @return Closure(?Model, LivewireComponent): ?TValue
+     */
+    public static function memoized(Closure $resolve): Closure
+    {
+        $memo = [];
+
+        return static function (?Model $record, LivewireComponent $livewire) use ($resolve, &$memo): mixed {
+            if (!$record instanceof Model) {
+                return null;
+            }
+
+            $memoKey = $record::class.'|'.$record->getKey().'|'.$livewire::class;
+
+            if (!array_key_exists($memoKey, $memo)) {
+                $memo[$memoKey] = $resolve($record, $livewire::class);
+            }
+
+            return $memo[$memoKey];
+        };
     }
 }

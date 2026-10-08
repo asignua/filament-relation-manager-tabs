@@ -44,7 +44,7 @@ class RelationManagerSection
      * @param BackedEnum|string|null                                     $icon      null = the manager's `getIcon()`
      * @param bool                                                       $collapsed start folded
      * @param bool|null                                                  $lazy      true = mount the manager on first expand; false = eager; null = follow the manager
-     * @param string|null                                                $key       the section id (no `\`, quotes, backtick, `<`, `>` or control characters); null = slug of the class name
+     * @param string|null                                                $key       the section id (no `\`, quotes, backtick, `&`, `<`, `>` or control characters); null = slug of the class name
      *
      * @throws InvalidArgumentException when `$key` is empty or holds one of those characters
      */
@@ -60,24 +60,10 @@ class RelationManagerSection
         $key = ManagerReference::key($class, $key);
 
         // The badge is needed twice per render (whether to show it, and its text); `getBadge()`
-        // often runs a query, so it is computed once per owner record (class + key) and page
-        // class. The memo lives as long as this Section object, i.e. one request: a badge read
-        // before a page action in the same request is served unchanged after it, which is
-        // accepted (the next request recomputes it).
-        $badges = [];
-        $badge = static function (?Model $record, LivewireComponent $livewire) use ($class, &$badges): ?string {
-            if (!$record instanceof Model) {
-                return null;
-            }
-
-            $memoKey = $record::class.'|'.$record->getKey().'|'.$livewire::class;
-
-            if (!array_key_exists($memoKey, $badges)) {
-                $badges[$memoKey] = $class::getBadge($record, $livewire::class);
-            }
-
-            return $badges[$memoKey];
-        };
+        // often runs a query, so it is computed once per owner record and page class. The memo
+        // lives as long as this Section object, i.e. one request: a badge read before a page
+        // action in the same request is served unchanged after it, which is accepted.
+        $badge = ManagerReference::memoized(static fn (Model $record, string $page): ?string => $class::getBadge($record, $page));
 
         return Section::make(
             $label ?? static fn (?Model $record, LivewireComponent $livewire): ?string => $record

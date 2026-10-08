@@ -245,6 +245,8 @@ class RelationManagerTabTest extends TestCase
             'angle bracket' => ['<posts>'],
             'line break' => ["posts\nmore"],
             'empty' => [''],
+            'ampersand' => ['posts&comments'],
+            'character reference' => ['a&lt;b'],
         ];
     }
 
@@ -260,7 +262,6 @@ class RelationManagerTabTest extends TestCase
             'space' => ['my posts'],
             'colon' => ['posts::tab'],
             'non-ascii' => ['пости'],
-            'ampersand' => ['posts&comments'],
         ];
     }
 
@@ -302,9 +303,32 @@ class RelationManagerTabTest extends TestCase
 
         $this->assertStringNotContainsString('[A-Za-z0-9_.-]', $guideline);
 
-        foreach (['empty', 'backslash', 'quote', 'backtick', 'angle bracket', 'control character'] as $rule) {
+        foreach (['empty', 'backslash', 'quote', 'backtick', 'ampersand', 'angle bracket', 'control character'] as $rule) {
             $this->assertStringContainsString($rule, $guideline);
         }
+    }
+
+    public function test_the_embedded_manager_guards_enter_against_submitting_the_page_form(): void
+    {
+        $html = $this->editHtml();
+
+        $this->assertStringContainsString('x-on:keydown.enter', $html);
+        $this->assertStringContainsString("\$event.target.form === \$el.closest('form')", html_entity_decode($html));
+    }
+
+    public function test_the_tab_badge_is_resolved_once_per_record(): void
+    {
+        PostsRelationManager::$badgeCalls = 0;
+        $tab = $this->editTab(PostsRelationManager::class);
+
+        // `Tabs` reads the badge in the nav, the dropdown trigger and the dropdown list
+        for ($read = 0; $read < 3; $read++) {
+            $this->assertSame('2', $tab->getBadge());
+            $this->assertSame('success', $tab->getBadgeColor());
+        }
+
+        // the render itself plus the reads above: one evaluation in total
+        $this->assertSame(1, PostsRelationManager::$badgeCalls);
     }
 
     /**

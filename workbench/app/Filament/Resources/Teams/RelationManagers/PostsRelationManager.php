@@ -13,8 +13,12 @@ class PostsRelationManager extends RelationManager
 {
     protected static string $relationship = 'posts';
 
+    public static int $badgeCalls = 0;
+
     public static function getBadge(Model $ownerRecord, string $pageClass): ?string
     {
+        self::$badgeCalls++;
+
         return (string) $ownerRecord->posts()->count();
     }
 

@@ -4,6 +4,12 @@ All notable changes to `asignua/filament-relation-manager-tabs` are documented h
 
 ## Unreleased
 
+- **Fixed:** the lazy placeholder of a tab or section no longer carries the owner record as a `record="{…json…}"` attribute. Filament's `Livewire` component always injects `'record'`; the manager has no such property, so a Livewire that forwards unknown parameters as HTML attributes printed the model JSON, and a `"` in it broke the attribute and leaked raw text into the hidden panel. `RelationManagerTab::livewire()` now sets `record` to `null` (a caller's `->data(['record' => …])` still overrides it) (#1, thanks @bernhardh).
+- **Requires Filament 5.6+** (was `^5.0`): the tab calls `deferBadge()` (5.3+) and `isBadgeDeferred()` (5.6+), so older Filament 5 crashed every Edit/View page with a tab.
+- Enter in the embedded manager's search, filter or inline-edit input no longer submits the Edit page form (it saved the half-edited record). The embedded component carries a `keydown.enter` guard limited to inputs owned by the outer form.
+- The tab resolves badge, badge colour and tooltip once per record and page instead of up to three times per render (`Tabs` reads them in the nav and both dropdown loops). Shared with the section via `ManagerReference::memoized()`.
+- **Behaviour change:** a custom `key:` containing `&` now throws `InvalidArgumentException`: the browser decodes character references (`a&lt;b`) in the tab button's Alpine attribute, so the tab opened empty.
+
 - Laravel Boost guideline: the custom `key:` rule now matches the code and the README (empty, backslash, quote, backtick, angle bracket or control character throws; everything else is accepted). It still described an earlier, stricter rule (`[A-Za-z0-9_.-]` only) that the code never shipped.
 
 ## v1.1.0 - 2026-10-03

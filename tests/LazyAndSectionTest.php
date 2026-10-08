@@ -67,6 +67,65 @@ class LazyAndSectionTest extends TestCase
         return str_contains($this->segment($html, $manager), '__lazyLoad');
     }
 
+    public function test_lazy_placeholder_does_not_leak_the_owner_record_into_attributes(): void
+    {
+        // Filament's `Livewire::getComponentProperties()` injects `record`; a relation manager has
+        // no such property, so it used to land in the attribute bag and print as `record="{…}"`.
+        $team = Team::create(['name' => 'The "Quoted" team']);
+        $html = Livewire::test(EditTeam::class, ['record' => $team->getRouteKey()])->html();
+
+        foreach (['PostsRelationManager', 'SectionPostsRelationManager'] as $manager) {
+            $segment = $this->segment($html, $manager);
+
+            $this->assertTrue($this->isPlaceholder($html, $manager));
+            $this->assertStringNotContainsString('record=', $segment);
+            $this->assertStringNotContainsString('Quoted', $segment);
+        }
+    }
+
+    /**
+     * @return array<int, LivewireComponent>
+     */
+    private function embeddedManagers(Team $team): array
+    {
+        $page = Livewire::test(EditTeam::class, ['record' => $team->getRouteKey()])->instance();
+        $found = [];
+
+        foreach ($page->getSchema('form')->getFlatComponents(withHidden: true) as $component) {
+            if ($component instanceof LivewireComponent) {
+                $found[] = $component;
+            }
+        }
+
+        $this->assertNotEmpty($found);
+
+        return $found;
+    }
+
+    public function test_the_stock_record_property_is_neutralised(): void
+    {
+        // `Livewire::getComponentProperties()` always adds `'record' => $this->getRecord()`. A
+        // manager has no `$record`, so a Livewire that forwards it lands it in the HTML attribute
+        // bag, and the placeholder prints it as `record="{…json…}"`.
+        foreach ($this->embeddedManagers(Team::create(['name' => 'The "Quoted" team'])) as $component) {
+            $properties = $component->getComponentProperties();
+
+            $this->assertArrayHasKey('record', $properties);
+            $this->assertNull($properties['record']);
+            $this->assertInstanceOf(Team::class, $properties['ownerRecord']);
+        }
+    }
+
+    public function test_caller_data_still_wins_over_the_record_default(): void
+    {
+        $team = Team::create(['name' => 'Core team']);
+        $component = $this->embeddedManagers($team)[0];
+
+        $component->data(['record' => 'mine']);
+
+        $this->assertSame('mine', $component->getComponentProperties()['record']);
+    }
+
     public function test_lazy_tab_section_and_eager_tab_render_as_requested(): void
     {
         $team = $this->team();

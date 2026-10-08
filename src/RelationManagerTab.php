@@ -48,21 +48,26 @@ use Livewire\Component as LivewireComponent;
  *    `…App\Filament\Eegnith…`. The tab opens EMPTY, with no console error. So the default
  *    key is the slug of the class basename; pass your own (shorter — with
  *    `persistTabInQueryString()` it ends up in the URL) as an argument; an empty key, or one
- *    holding a backslash, a quote, a backtick, `<`, `>` or a control character, is rejected.
- * 3. **The manager renders INSIDE the edit page `<form>`, and that is fine.** Filament draws
- *    the action modal only once the action is mounted, i.e. by a Livewire DOM patch, not in
- *    the initial HTML — so the nested `<form wire:submit="callMountedAction">` survives in
- *    the browser (an HTML parser would drop it only from raw markup). `hasFormWrapper(): false`
- *    on the Edit page is NOT needed.
+ *    holding a backslash, a quote, a backtick, `&`, `<`, `>` or a control character, is rejected.
+ * 3. **The manager renders INSIDE the edit page `<form>`.** Modals are fine: Filament draws the
+ *    action modal only once the action is mounted, i.e. by a Livewire DOM patch, so the nested
+ *    `<form wire:submit="callMountedAction">` survives. Implicit submission is not: Enter in the
+ *    manager's search field, a filter input or an inline-editable column would submit the OUTER
+ *    form and save the record, so the embedded component is wrapped in a `keydown.enter` guard
+ *    that stops Enter for inputs owned by the outer form only (the manager's own modal forms
+ *    and the search's `keyup` refresh keep working). `hasFormWrapper(): false` remains an
+ *    alternative.
  */
 class RelationManagerTab
 {
+    private const ENTER_GUARD = "if (\$event.target.form && \$event.target.form === \$el.closest('form') && \$event.target.matches('input:not([type=checkbox]):not([type=radio]):not([type=submit]):not([type=button])')) \$event.preventDefault()";
+
     /**
      * @param class-string<RelationManager>|RelationManagerConfiguration $manager a manager class, or
      *                                                                            `Manager::make([...])` to pass it properties
      * @param Htmlable|string|null                                       $label   the label; null = the manager's `getTitle()`
      * @param BackedEnum|string|null                                     $icon    the icon; null = the manager's `getIcon()`
-     * @param string|null                                                $key     the tab key (no `\`, quotes, backtick, `<`, `>` or control characters);
+     * @param string|null                                                $key     the tab key (no `\`, quotes, backtick, `&`, `<`, `>` or control characters);
      *                                                                            null = slug of the class name
      * @param bool|null                                                  $lazy    null = follow the manager's `$isLazy` (Filament's
      *                                                                            default is lazy); true = force lazy; false = force eager
@@ -89,19 +94,15 @@ class RelationManagerTab
             ->iconPosition(static fn (?Model $record, LivewireComponent $livewire): IconPosition => $record
                 ? $class::getIconPosition($record, $livewire::class)
                 : IconPosition::Before)
-            ->badge(static fn (?Model $record, LivewireComponent $livewire): ?string => $record
-                ? $class::getBadge($record, $livewire::class)
-                : null)
+            // `Tabs` reads the badge, colour and tooltip up to three times per render; each is
+            // resolved once per record and page (a manager's `getBadge()` usually counts rows).
+            ->badge(ManagerReference::memoized(static fn (Model $record, string $page): ?string => $class::getBadge($record, $page)))
             // `$isBadgeDeferred` on the manager: the page renders without the badge and fetches it
             // in a separate request, exactly as on a stock relation-manager tab.
             ->deferBadge(static fn (?Model $record, LivewireComponent $livewire): bool => $record
                 && $class::isBadgeDeferred($record, $livewire::class))
-            ->badgeColor(static fn (?Model $record, LivewireComponent $livewire): ?string => $record
-                ? $class::getBadgeColor($record, $livewire::class)
-                : null)
-            ->badgeTooltip(static fn (?Model $record, LivewireComponent $livewire): string|Htmlable|null => $record
-                ? $class::getBadgeTooltip($record, $livewire::class)
-                : null)
+            ->badgeColor(ManagerReference::memoized(static fn (Model $record, string $page): ?string => $class::getBadgeColor($record, $page)))
+            ->badgeTooltip(ManagerReference::memoized(static fn (Model $record, string $page): string|Htmlable|null => $class::getBadgeTooltip($record, $page)))
             ->visible(static fn (?Model $record, LivewireComponent $livewire): bool => $record instanceof Model
                 && $record->exists
                 && $class::canViewForRecord($record, $livewire::class))
@@ -135,6 +136,12 @@ class RelationManagerTab
             $class,
             static function (Model $record, LivewireComponent $livewire) use ($class, $configured, $lazy): array {
                 $properties = [
+                    // Filament's `Livewire::getComponentProperties()` injects `'record' => $this->getRecord()`
+                    // before the caller's data. A manager has no `$record`, so the model would land in
+                    // the component's HTML attribute bag and the lazy placeholder would print it as
+                    // `record="{…json…}"`; a quote in that JSON breaks the attribute and leaks text into
+                    // the hidden panel. `null` renders nothing; a `->data(['record' => …])` still wins.
+                    'record' => null,
                     'ownerRecord' => $record,
                     'pageClass' => $livewire::class,
                 ];
@@ -163,7 +170,15 @@ class RelationManagerTab
 
                 return $properties;
             },
-        )->key($class);
+        )
+            ->key($class)
+            // The manager sits inside the Edit page's `<form wire:submit="save">`, and its search
+            // field, filter inputs and inline-editable columns are bare inputs owned by that
+            // form: Enter would submit it and save the half-edited record. Swallow Enter only for
+            // inputs owned by the OUTER form; the manager's own modal forms are separate `<form>`s.
+            ->extraAttributes([
+                'x-on:keydown.enter' => self::ENTER_GUARD,
+            ]);
     }
 
     /**
