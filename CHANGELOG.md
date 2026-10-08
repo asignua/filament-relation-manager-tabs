@@ -2,7 +2,7 @@
 
 All notable changes to `asignua/filament-relation-manager-tabs` are documented here.
 
-## Unreleased
+## v1.1.1 - 2026-10-08
 
 - **Fixed:** the lazy placeholder of a tab or section no longer carries the owner record as a `record="{…json…}"` attribute. Filament's `Livewire` component always injects `'record'`; the manager has no such property, so a Livewire that forwards unknown parameters as HTML attributes printed the model JSON, and a `"` in it broke the attribute and leaked raw text into the hidden panel. `RelationManagerTab::livewire()` now sets `record` to `null` (a caller's `->data(['record' => …])` still overrides it) (#1, thanks @bernhardh).
 - **Requires Filament 5.6+** (was `^5.0`): the tab calls `deferBadge()` (5.3+) and `isBadgeDeferred()` (5.6+), so older Filament 5 crashed every Edit/View page with a tab.
