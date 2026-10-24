@@ -47,9 +47,11 @@ class RelationManagerTabTest extends TestCase
      */
     private function buttonKeys(string $html): array
     {
-        preg_match_all('/x-on:click="tab = \'([^\']*)\'"/', $html, $matches);
+        // Filament 5.9: `x-on:click="tab = '<key>'"`; 5.10+: `data-tab-key="<key>"` (the click
+        // handler became `selectTab(<Js::from key>)`, the key itself is no longer pasted raw).
+        preg_match_all('/x-on:click="tab = \'([^\']*)\'"|data-tab-key="([^"]*)"/', $html, $matches, PREG_SET_ORDER);
 
-        return $matches[1];
+        return array_map(fn (array $match): string => $match[2] ?? $match[1], $matches);
     }
 
     public function test_tab_button_keys_contain_no_backslash(): void
@@ -67,7 +69,7 @@ class RelationManagerTabTest extends TestCase
     {
         $html = $this->editHtml();
 
-        preg_match_all('/\'fi-active\': tab === \'([^\']*)\'/', $html, $panels);
+        preg_match_all('/\'fi-active\': (?:tab === |isTabSelected\()\'([^\']*)\'/', $html, $panels);
 
         $panelKeys = array_values(array_unique($panels[1]));
         $buttonKeys = array_values(array_unique($this->buttonKeys($html)));
