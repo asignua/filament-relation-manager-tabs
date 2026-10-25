@@ -7,7 +7,7 @@
 [![License](https://img.shields.io/packagist/l/asignua/filament-relation-manager-tabs.svg?style=flat-square)](https://github.com/asignua/filament-relation-manager-tabs/blob/main/LICENSE.md)
 [![Plumb score](https://plumbphp.dev/badges/asignua/filament-relation-manager-tabs/composite.svg)](https://plumbphp.dev/asignua/filament-relation-manager-tabs)
 
-<img class="filament-hidden" src="https://raw.githubusercontent.com/asignua/filament-relation-manager-tabs/v1.0.0/art/cover.jpg" alt="Filament Relation Manager Tabs">
+<img class="filament-hidden" src="https://raw.githubusercontent.com/asignua/filament-relation-manager-tabs/v1.1.2/art/cover.jpg" alt="Filament Relation Manager Tabs">
 
 Render a [Filament](https://filamentphp.com) relation manager as an ordinary tab of the record
 form. The edit page then has exactly **one row of tabs**: the form's own tabs and your relation
@@ -28,27 +28,27 @@ managers side by side.
 
 One row of tabs — the form's own tabs and the relation managers side by side, with their badges:
 
-![Relation managers as form tabs](https://raw.githubusercontent.com/asignua/filament-relation-manager-tabs/v1.0.0/art/tasks-tab.jpg)
+![Relation managers as form tabs](https://raw.githubusercontent.com/asignua/filament-relation-manager-tabs/v1.1.2/art/tasks-tab.jpg)
 
 The same page in dark mode:
 
-![Dark mode](https://raw.githubusercontent.com/asignua/filament-relation-manager-tabs/v1.0.0/art/tasks-tab-dark.jpg)
+![Dark mode](https://raw.githubusercontent.com/asignua/filament-relation-manager-tabs/v1.1.2/art/tasks-tab-dark.jpg)
 
 The form tabs work as usual:
 
-![The Details tab](https://raw.githubusercontent.com/asignua/filament-relation-manager-tabs/v1.0.0/art/details-tab.jpg)
+![The Details tab](https://raw.githubusercontent.com/asignua/filament-relation-manager-tabs/v1.1.2/art/details-tab.jpg)
 
 For comparison, stock Filament — the managers get a second row of tabs under the form:
 
-![Stock Filament: a second row of tabs under the form](https://raw.githubusercontent.com/asignua/filament-relation-manager-tabs/v1.0.0/art/stock-filament.jpg)
+![Stock Filament: a second row of tabs under the form](https://raw.githubusercontent.com/asignua/filament-relation-manager-tabs/v1.1.2/art/stock-filament.jpg)
 
 A `RelationManagerSection` starts collapsed - nothing is loaded:
 
-![A collapsed relation-manager section](https://raw.githubusercontent.com/asignua/filament-relation-manager-tabs/v1.1.0/art/section-collapsed.jpg)
+![A collapsed relation-manager section](https://raw.githubusercontent.com/asignua/filament-relation-manager-tabs/v1.1.2/art/section-collapsed.jpg)
 
 Expanding it mounts the manager on demand:
 
-![The expanded section](https://raw.githubusercontent.com/asignua/filament-relation-manager-tabs/v1.1.0/art/section-expanded.jpg)
+![The expanded section](https://raw.githubusercontent.com/asignua/filament-relation-manager-tabs/v1.1.2/art/section-expanded.jpg)
 
 ## Requirements
 
