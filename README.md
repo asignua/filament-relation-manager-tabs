@@ -246,6 +246,15 @@ composer format    # Pint
 
 See [CHANGELOG.md](https://github.com/asignua/filament-relation-manager-tabs/blob/main/CHANGELOG.md).
 
+## More plugins by asign
+
+- [Clusters](https://filamentphp.com/plugins/asign-clusters) — group resources into panel clusters
+- [Row Layout](https://filamentphp.com/plugins/asign-row-layout) — column manager for tables
+- [Record Lock](https://filamentphp.com/plugins/asign-record-lock) — stop two people editing the same record
+- [Themes](https://filamentphp.com/plugins/asign-themes) — per-user and per-panel colour themes
+
+All plugins: <https://filamentphp.com/plugins?q=asign>
+
 ## License
 
 MIT. See [LICENSE.md](https://github.com/asignua/filament-relation-manager-tabs/blob/main/LICENSE.md).
