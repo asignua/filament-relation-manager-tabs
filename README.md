@@ -248,7 +248,7 @@ See [CHANGELOG.md](https://github.com/asignua/filament-relation-manager-tabs/blo
 
 ## More plugins by asign
 
-- [Clusters](https://filamentphp.com/plugins/asign-clusters) — group resources into panel clusters
+- [Clusters](https://filamentphp.com/plugins/asign-clusters) — several fields in one input row
 - [Row Layout](https://filamentphp.com/plugins/asign-row-layout) — column manager for tables
 - [Record Lock](https://filamentphp.com/plugins/asign-record-lock) — stop two people editing the same record
 - [Themes](https://filamentphp.com/plugins/asign-themes) — per-user and per-panel colour themes
