@@ -54,7 +54,7 @@ Expanding it mounts the manager on demand:
 
 - PHP 8.3+
 - Laravel 12 or 13
-- Filament 5.6+ (the tab uses `deferBadge()` and `isBadgeDeferred()`)
+- Filament 5.11.2+ (the tab uses `lazyLoadedBadge()` and `isBadgeDeferred()`)
 
 ## Installation
 

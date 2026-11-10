@@ -189,7 +189,7 @@ class RelationManagerTabTest extends TestCase
 
         /** @var Tabs $tabs */
         $tabs = $component->instance()->form->getComponents()[0];
-        $badges = $tabs->getDeferredTabBadges();
+        $badges = $tabs->getLazyLoadedTabBadges();
 
         // only the deferred tab is fetched later, and it gets its real badge then
         $this->assertCount(1, $badges, implode(', ', array_keys($badges)));

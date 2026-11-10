@@ -2,6 +2,10 @@
 
 All notable changes to `asignua/filament-relation-manager-tabs` are documented here.
 
+## v1.2.0 - 2026-11-10
+
+- Requires Filament ^5.11.2; replaced deprecated Filament API calls: `Tab::deferBadge()` -> `lazyLoadedBadge()` (1), `Tabs::getDeferredTabBadges()` -> `getLazyLoadedTabBadges()` (1, test).
+
 ## v1.1.2 - 2026-10-25
 - **Tests:** the tab-key assertions read the tab buttons from `data-tab-key` and the panels from `isTabSelected('<key>')` as well as the Filament 5.9 markup (`tab = '<key>'` / `tab === '<key>'`). Filament 5.10 rewrote the Tabs markup, so those tests found no tabs and failed on the latest dependencies. Plugin behaviour is unchanged: tabs open correctly on 5.9 and 5.10.
 

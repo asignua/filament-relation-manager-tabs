@@ -99,7 +99,7 @@ class RelationManagerTab
             ->badge(ManagerReference::memoized(static fn (Model $record, string $page): ?string => $class::getBadge($record, $page)))
             // `$isBadgeDeferred` on the manager: the page renders without the badge and fetches it
             // in a separate request, exactly as on a stock relation-manager tab.
-            ->deferBadge(static fn (?Model $record, LivewireComponent $livewire): bool => $record
+            ->lazyLoadedBadge(static fn (?Model $record, LivewireComponent $livewire): bool => $record
                 && $class::isBadgeDeferred($record, $livewire::class))
             ->badgeColor(ManagerReference::memoized(static fn (Model $record, string $page): ?string => $class::getBadgeColor($record, $page)))
             ->badgeTooltip(ManagerReference::memoized(static fn (Model $record, string $page): string|Htmlable|null => $class::getBadgeTooltip($record, $page)))
