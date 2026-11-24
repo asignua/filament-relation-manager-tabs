@@ -255,6 +255,8 @@ See [CHANGELOG.md](https://github.com/asignua/filament-relation-manager-tabs/blo
 
 All plugins: <https://filamentphp.com/plugins?q=asign>
 
+Catalogue of free and commercial plugins: <https://asign.tech/en/plugins>
+
 ## License
 
 MIT. See [LICENSE.md](https://github.com/asignua/filament-relation-manager-tabs/blob/main/LICENSE.md).
